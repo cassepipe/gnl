@@ -6,7 +6,7 @@
 /*   By: tpouget <cassepipe@ymail.com>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/06/07 11:32:34 by tpouget           #+#    #+#             */
-/*   Updated: 2020/06/08 16:51:38 by tpouget          ###   ########.fr       */
+/*   Updated: 2020/08/09 00:43:41 by tpouget          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,20 +49,25 @@ int			get_next_line(int fd, char **line)
 
 	if (fd < 0 || BUFFER_SIZE < 1)
 		return (-1);
+	if(!buffers[fd] && !(bytes_read = read(fd, buffers[fd], BUFFER_SIZE)))
+		return (0);
 	while ((ret = get_line_from(&buffers[fd], line)))
 	{
 		old_buffer = buffers[fd];
 		if (ret < 0 || !(buffers[fd] = malloc(BUFFER_SIZE + 1)))
 			return (-1);
-		bytes_read = read(fd, buffers[fd], BUFFER_SIZE);
 		free(old_buffer);
-		if (bytes_read < 1)
+		bytes_read = read(fd, buffers[fd], BUFFER_SIZE);
+		if (bytes_read < 0)
+			return (-1);
+		else if (!bytes_read)
 		{
 			free(buffers[fd]);
 			buffers[fd] = NULL;
-			return (bytes_read ? -1 : 0);
+			return (1);
 		}
-		buffers[fd][bytes_read] = '\0';
+		else
+			buffers[fd][bytes_read] = '\0';
 	}
 	return (1);
 }
